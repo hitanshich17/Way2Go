@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhillyPath — Your AI College Counselor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --philly-blue: #003f8a;
+      --philly-green: #00a651;
+      --philly-gold: #f5b700;
+      --bg-dark: #0a0f1e;
+      --bg-card: #111827;
+      --bg-card2: #1a2235;
+      --border: #1e2d45;
+      --text-primary: #f0f4ff;
+      --text-secondary: #8899bb;
+      --text-muted: #4a5568;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-gold: #f59e0b;
+      --gradient-hero: linear-gradient(135deg, #003f8a 0%, #0061d5 50%, #003f8a 100%);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    #root { height: 100%; }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes bounce-dot {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+
+    /* ─── LAYOUT ─── */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--gradient-hero);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 15px rgba(0, 97, 213, 0.4);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-tagline {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-stats {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.gold { color: var(--accent-gold); }
+
+    .sidebar-section {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .quick-prompt {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      margin-bottom: 6px;
+      transition: all 0.15s ease;
+      line-height: 1.4;
+    }
+
+    .quick-prompt:hover {
+      background: var(--border);
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+      transform: translateX(2px);
+    }
+
+    .quick-prompt .prompt-icon {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .language-toggle {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .lang-btn {
+      flex: 1;
+      padding: 8px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .lang-btn.active {
+      background: var(--philly-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .hackathon-badge {
+      background: linear-gradient(135deg, #1a2235, #1e2d45);
+      border: 1px solid var(--accent-gold);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .hackathon-badge .badge-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .hackathon-badge .badge-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── TABS ─── */
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      padding: 16px 24px 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover { color: var(--text-primary); }
+
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    /* ─── CHAT ─── */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0 24px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Welcome screen */
+    .welcome-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .welcome-hero-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--gradient-hero);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 97, 213, 0.4);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .welcome-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .welcome-title span {
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .welcome-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-width: 560px;
+      width: 100%;
+    }
+
+    .welcome-card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .welcome-card:hover {
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+    }
+
+    .welcome-card-icon { font-size: 22px; margin-bottom: 8px; }
+    .welcome-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .welcome-card-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Messages */
+    .message-row {
+      display: flex;
+      gap: 12px;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .message-row.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .avatar.ai {
+      background: var(--gradient-hero);
+      box-shadow: 0 4px 12px rgba(0, 97, 213, 0.3);
+    }
+
+    .avatar.user {
+      background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .message-bubble.ai {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+      color: var(--text-primary);
+    }
+
+    .message-bubble.user {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      border-top-right-radius: 4px;
+      color: white;
+    }
+
+    /* markdown inside AI messages */
+    .message-bubble.ai p { margin-bottom: 10px; }
+    .message-bubble.ai p:last-child { margin-bottom: 0; }
+    .message-bubble.ai ul, .message-bubble.ai ol { padding-left: 20px; margin-bottom: 10px; }
+    .message-bubble.ai li { margin-bottom: 4px; }
+    .message-bubble.ai strong { color: #93c5fd; }
+    .message-bubble.ai h3 { font-size: 14px; color: #93c5fd; margin-bottom: 8px; }
+    .message-bubble.ai a { color: var(--accent-blue); text-decoration: none; }
+    .message-bubble.ai a:hover { text-decoration: underline; }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 14px 18px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      animation: bounce-dot 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.32s; }
+
+    /* ─── CHAT INPUT ─── */
+    .chat-input-area {
+      padding: 16px 0 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      min-height: 52px;
+      max-height: 140px;
+      transition: border-color 0.15s;
+      line-height: 1.5;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .send-btn {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ─── OPPORTUNITIES TAB ─── */
+    .opportunities-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .opp-header {
+      margin-bottom: 24px;
+    }
+
+    .opp-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .opp-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .opp-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .filter-chip {
+      padding: 6px 14px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .filter-chip:hover, .filter-chip.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .opp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .opp-card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .opp-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-blue);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .opp-card.featured {
+      border-color: rgba(245, 183, 0, 0.4);
+    }
+
+    .opp-card.featured::before {
+      content: '⭐ Featured';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(245, 183, 0, 0.15);
+      border: 1px solid rgba(245, 183, 0, 0.3);
+      color: var(--accent-gold);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .opp-type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .opp-type-badge.scholarship { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+    .opp-type-badge.mentorship { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+    .opp-type-badge.internship { background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); }
+    .opp-type-badge.workforce { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+
+    .opp-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      padding-right: 60px;
+    }
+
+    .opp-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .opp-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .opp-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .opp-meta-item strong {
+      color: var(--text-secondary);
+    }
+
+    .opp-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .eligibility-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      max-width: 70%;
+    }
+
+    .ask-ai-btn {
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      color: var(--accent-blue);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .ask-ai-btn:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    /* ─── STATS BANNER ─── */
+    .stats-banner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .stat-card-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-blue);
+    }
+
+    .stat-card-value.red { color: #ef4444; }
+    .stat-card-value.green { color: var(--accent-green); }
+
+    .stat-card-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── ABOUT TAB ─── */
+    .about-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      max-width: 760px;
+    }
+
+    .about-hero {
+      background: var(--gradient-hero);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .about-hero::after {
+      content: '🦅';
+      position: absolute;
+      right: 24px;
+      bottom: 16px;
+      font-size: 64px;
+      opacity: 0.15;
+    }
+
+    .about-hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .about-hero-sub {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      max-width: 500px;
+    }
+
+    .about-section {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .about-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .about-section p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+
+    .about-section p:last-child { margin-bottom: 0; }
+
+    .problem-stat {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .problem-stat-num {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ef4444;
+      flex-shrink: 0;
+      min-width: 60px;
+    }
+
+    .problem-stat-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tech-chip {
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    .team-member {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .team-member:last-child { border-bottom: none; }
+
+    .team-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--gradient-hero);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .team-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .team-role { font-size: 11px; color: var(--text-secondary); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .welcome-cards { grid-template-columns: 1fr; }
+      .stats-banner { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+
+    // ─── Config ──────────────────────────────────────────────────────────────
+    const API_BASE = 'http://localhost:8000';
+
+    // ─── Opportunities Data (local fallback) ─────────────────────────────────
+    const OPPORTUNITIES = [
+      {
+        id: 1, name: "Say Yes Philadelphia", type: "scholarship", category: "scholarship",
+        description: "Full college tuition for Philadelphia public school graduates. One of the most powerful programs in the country — and one of the most underutilized.",
+        amount: "Full tuition", deadline: "Apply senior year", eligibility: "SDP graduate", featured: true,
+        link: "https://sayyesphiladelphia.org"
+      },
+      {
+        id: 2, name: "Philadelphia Futures", type: "mentorship", category: "mentorship",
+        description: "Free college access coaching, tutoring, and mentorship for first-generation Philly students from 10th grade through college graduation.",
+        amount: "Free program", deadline: "Apply 10th or 11th grade", eligibility: "First-gen, SDP student", featured: true,
+        link: "https://philadelphiafutures.org"
+      },
+      {
+        id: 3, name: "CCP Promise Scholarship", type: "scholarship", category: "scholarship",
+        description: "Free tuition at Community College of Philadelphia. If you're a Philly resident who just graduated, you likely qualify.",
+        amount: "Free tuition", deadline: "Rolling", eligibility: "Philadelphia resident", featured: true,
+        link: "https://www.ccp.edu"
+      },
+      {
+        id: 4, name: "QuestBridge", type: "scholarship", category: "scholarship",
+        description: "Matches outstanding lower-income students with full scholarships to top US colleges including Penn, Princeton, Yale, and 45+ others.",
+        amount: "Full scholarship", deadline: "September (seniors)", eligibility: "High-achieving, lower-income", featured: true,
+        link: "https://questbridge.org"
+      },
+      {
+        id: 5, name: "Philadelphia Youth Network", type: "internship", category: "internship",
+        description: "Paid summer internships and year-round workforce development for Philadelphia youth ages 14–24.",
+        amount: "Paid", deadline: "Apply spring", eligibility: "Philadelphia resident, 14–24", featured: false,
+        link: "https://pyninc.org"
+      },
+      {
+        id: 6, name: "Esperanza Scholarship", type: "scholarship", category: "scholarship",
+        description: "Scholarship support for Latino/Hispanic students in Philadelphia. Awards up to $2,500/year for college.",
+        amount: "Up to $2,500/yr", deadline: "Spring", eligibility: "Latino/Hispanic, Philly resident", featured: false,
+        link: "https://esperanza.us"
+      },
+      {
+        id: 7, name: "YouthBuild Philadelphia", type: "workforce", category: "workforce",
+        description: "Free GED + construction/healthcare job training for out-of-school youth with a paid stipend.",
+        amount: "Free + stipend", deadline: "Rolling", eligibility: "18–24, out of school", featured: false,
+        link: "https://youthbuildphila.org"
+      },
+      {
+        id: 8, name: "Jack Kent Cooke Foundation", type: "scholarship", category: "scholarship",
+        description: "Highly competitive, highly prestigious scholarship for high-achieving lower-income students. Worth up to $40,000/year.",
+        amount: "Up to $40,000/yr", deadline: "November (seniors)", eligibility: "High GPA + financial need", featured: false,
+        link: "https://jkcf.org"
+      },
+    ];
+
+    const QUICK_PROMPTS = [
+      { icon: "🎓", text: "What scholarships can I get as a Philly student?", label: "Scholarships" },
+      { icon: "📋", text: "Help me understand how to apply for FAFSA", label: "FAFSA Help" },
+      { icon: "🏫", text: "What colleges are in Philadelphia and which is right for me?", label: "Local Colleges" },
+      { icon: "💼", text: "I want a paid internship this summer. Where do I start?", label: "Internships" },
+      { icon: "🌟", text: "I'm a first-generation student. What should I do first?", label: "First-Gen Guide" },
+      { icon: "🗓️", text: "What are the most important deadlines I need to know?", label: "Deadlines" },
+    ];
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    function renderMarkdown(text) {
+      try {
+        return { __html: marked.parse(text) };
+      } catch {
+        return { __html: text };
+      }
+    }
+
+    // ─── Components ──────────────────────────────────────────────────────────
+
+    function TypingIndicator() {
+      return (
+        <div className="message-row fade-in">
+          <div className="avatar ai">🦅</div>
+          <div className="message-bubble ai">
+            <div className="typing-indicator">
+              <div className="typing-dot" />
+              <div className="typing-dot" />
+              <div className="typing-dot" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ChatTab({ messages, isLoading, onSend, onQuickPrompt }) {
+      const [input, setInput] = useState('');
+      const messagesEndRef = useRef(null);
+      const textareaRef = useRef(null);
+
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages, isLoading]);
+
+      const handleSend = () => {
+        if (!input.trim() || isLoading) return;
+        onSend(input.trim());
+        setInput('');
+        if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+        }
+      };
+
+      const handleInput = (e) => {
+        setInput(e.target.value);
+        e.target.style.height = 'auto';
+        e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
+      };
+
+      return (
+        <div className="chat-container">
+          <div className="chat-messages">
+            {messages.length === 0 ? (
+              <div className="welcome-screen fade-in">
+                <div className="welcome-hero-icon">🦅</div>
+                <h1 className="welcome-title">
+                  Hey! I'm <span>PhillyPath</span>
+                </h1>
+                <p className="welcome-subtitle">
+                  Your free AI college counselor — built for Philadelphia students.
+                  Ask me about scholarships, college applications, financial aid, internships, and more.
+                </p>
+                <div className="welcome-cards">
+                  {QUICK_PROMPTS.slice(0, 4).map((p) => (
+                    <div key={p.text} className="welcome-card" onClick={() => onQuickPrompt(p.text)}>
+                      <div className="welcome-card-icon">{p.icon}</div>
+                      <div className="welcome-card-title">{p.label}</div>
+                      <div className="welcome-card-desc">{p.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              messages.map((msg, i) => (
+                <div key={i} className={`message-row ${msg.role} fade-in`}>
+                  <div className={`avatar ${msg.role}`}>
+                    {msg.role === 'ai' ? '🦅' : '🎓'}
+                  </div>
+                  <div className={`message-bubble ${msg.role}`}>
+                    {msg.role === 'ai'
+                      ? <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />
+                      : msg.content
+                    }
+                  </div>
+                </div>
+              ))
+            )}
+            {isLoading && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="chat-input-area">
+            <div className="input-row">
+              <textarea
+                ref={textareaRef}
+                className="chat-input"
+                value={input}
+                onChange={handleInput}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about scholarships, FAFSA, colleges, internships..."
+                rows={1}
+              />
+              <button
+                className="send-btn"
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+              >
+                ➤
+              </button>
+            </div>
+            <div className="input-hint">Press Enter to send · Shift+Enter for new line · Free & private</div>
+          </div>
+        </div>
+      );
+    }
+
+    function OpportunitiesTab({ onAskAI }) {
+      const [filter, setFilter] = useState('all');
+
+      const filtered = filter === 'all'
+        ? OPPORTUNITIES
+        : OPPORTUNITIES.filter(o => o.category === filter);
+
+      const typeColors = {
+        scholarship: 'scholarship',
+        mentorship: 'mentorship',
+        internship: 'internship',
+        workforce: 'workforce',
+      };
+
+      return (
+        <div className="opportunities-container">
+          <div className="opp-header">
+            <h2 className="opp-title">Philadelphia Opportunities</h2>
+            <p className="opp-subtitle">Scholarships, programs, and internships curated for Philly students</p>
+          </div>
+
+          <div className="opp-filters">
+            {['all', 'scholarship', 'mentorship', 'internship', 'workforce'].map(f => (
+              <button
+                key={f}
+                className={`filter-chip ${filter === f ? 'active' : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? '✦ All' : f.charAt(0).toUpperCase() + f.slice(1) + 's'}
+              </button>
+            ))}
+          </div>
+
+          <div className="opp-grid">
+            {filtered.map((opp) => (
+              <div key={opp.id} className={`opp-card fade-in ${opp.featured ? 'featured' : ''}`}>
+                <div className={`opp-type-badge ${typeColors[opp.category] || 'scholarship'}`}>
+                  {opp.type}
+                </div>
+                <div className="opp-name">{opp.name}</div>
+                <div className="opp-desc">{opp.description}</div>
+                <div className="opp-meta">
+                  <div className="opp-meta-item">💰 <strong>{opp.amount}</strong></div>
+                  <div className="opp-meta-item">📅 <strong>{opp.deadline}</strong></div>
+                </div>
+                <div className="opp-card-footer">
+                  <div className="eligibility-tag">👤 {opp.eligibility}</div>
+                  <button
+                    className="ask-ai-btn"
+                    onClick={() => onAskAI(`Tell me more about ${opp.name} and how I can apply`)}
+                  >
+                    Ask AI →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function AboutTab() {
+      return (
+        <div className="about-container">
+          <div className="about-hero">
+            <div className="about-hero-title">Built for Philadelphia. Built for You.</div>
+            <div className="about-hero-sub">
+              PhillyPath gives every student in Philadelphia access to the kind of college counseling
+              that used to only exist in wealthy school districts — free, intelligent, and available 24/7.
+            </div>
+          </div>
+
+          <div className="about-section">
+            <div className="about-section-title">⚠️ The Problem</div>
+            <div className="problem-stat">
+              <div className="problem-stat-num">491:1</div>
+              <div className="problem-stat-text">Students per counselor in Philadelphia schools. The national recommended ratio is 250:1. Wealthy suburbs often have 100:1.</div>
+            </div>
+            <div className="problem-stat">
+              <div className="problem-stat-num">$150M+</div>
+              <div className="problem-stat-text">In scholarship money goes unclaimed every year, often because students don't know it exists or how to apply.</div>
+            </div>
+            <div className="problem-stat">
+              <div className="problem-stat-num">67%</div>
+              <div className="problem-stat-text">Of Philadelphia public school students are first-generation college students — navigating a complex system without a guide.</div>
+            </div>
+          </div>
+
+          <div className="about-section">
+            <div className="about-section-title">✨ Our Solution</div>
+            <p>PhillyPath is an AI college counselor trained specifically on Philadelphia's education ecosystem — every scholarship, every program, every local resource. It's available 24/7, completely free, and speaks both English and Spanish.</p>
+            <p>We've combined Claude AI's conversational intelligence with a curated knowledge base of real Philadelphia opportunities — from Say Yes Philadelphia (free college tuition!) to QuestBridge to the CCP Promise Scholarship — to give every student the guidance they deserve.</p>
+          </div>
+
+          <div className="about-section">
+            <div className="about-section-title">🛠️ How It's Built</div>
+            <p>PhillyPath is built with a full-stack architecture designed for reliability and scale:</p>
+            <div className="tech-stack" style={{marginTop: 12}}>
+              {['React', 'Python FastAPI', 'Claude AI (Anthropic)', 'Philly Knowledge Base', 'OpenDataPhilly', 'Tailwind CSS'].map(t => (
+                <span key={t} className="tech-chip">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="about-section">
+            <div className="about-section-title">🔒 Responsible AI Principles</div>
+            <p><strong>Privacy first:</strong> We never store student conversations. No accounts required. No data sold.</p>
+            <p><strong>Accuracy:</strong> PhillyPath is grounded in real, verified Philadelphia resources. It always recommends students verify details directly with programs.</p>
+            <p><strong>Equity:</strong> Multi-language support (English/Spanish). Designed for students with limited access to guidance — not students who already have it.</p>
+            <p><strong>Augmentation, not replacement:</strong> PhillyPath encourages students to work with their school counselors. We're a supplement, not a substitute.</p>
+          </div>
+
+          <div className="about-section">
+            <div className="about-section-title">🚀 What's Next</div>
+            <p>Partner with School District of Philadelphia to deploy in every high school. Add real-time data from OpenDataPhilly. Build a mobile app for SMS access for students without reliable internet. Expand to cover all 50 states' city school systems.</p>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Stats Banner ─────────────────────────────────────────────────────────
+    function StatsBanner() {
+      return (
+        <div className="stats-banner">
+          <div className="stat-card">
+            <div className="stat-card-value red">491:1</div>
+            <div className="stat-card-label">Students per counselor in Philly</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-card-value green">$150M+</div>
+            <div className="stat-card-label">Scholarship $ unclaimed yearly</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-card-value" style={{color: '#f59e0b'}}>203,000</div>
+            <div className="stat-card-label">SDP students we can reach</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Sidebar ─────────────────────────────────────────────────────────────
+    function Sidebar({ onQuickPrompt }) {
+      const [lang, setLang] = useState('en');
+
+      return (
+        <div className="sidebar">
+          <div className="sidebar-logo">
+            <div className="logo-badge">
+              <div className="logo-icon">🦅</div>
+              <div className="logo-text">
+                <div className="logo-name">PhillyPath</div>
+                <div className="logo-tagline">AI College Counselor</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sidebar-stats">
+            <div className="stat-item">
+              <span className="stat-label">Scholarships tracked</span>
+              <span className="stat-value">8+</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Local programs</span>
+              <span className="stat-value green">12+</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Free to use</span>
+              <span className="stat-value gold">Always</span>
+            </div>
+          </div>
+
+          <div className="sidebar-section">
+            <div className="sidebar-section-title">Quick Questions</div>
+            {QUICK_PROMPTS.map((p) => (
+              <button key={p.text} className="quick-prompt" onClick={() => onQuickPrompt(p.text)}>
+                <span className="prompt-icon">{p.icon}</span>
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="sidebar-section">
+            <div className="sidebar-section-title">Language / Idioma</div>
+            <div className="language-toggle">
+              <button
+                className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
+                onClick={() => { setLang('en'); onQuickPrompt('Please respond in English from now on.'); }}
+              >
+                🇺🇸 English
+              </button>
+              <button
+                className={`lang-btn ${lang === 'es' ? 'active' : ''}`}
+                onClick={() => { setLang('es'); onQuickPrompt('Por favor respóndeme en español de ahora en adelante. Hola, ¿puedes ayudarme con información sobre becas en Filadelfia?'); }}
+              >
+                🇲🇽 Español
+              </button>
+            </div>
+          </div>
+
+          <div className="sidebar-footer">
+            <div className="hackathon-badge">
+              <div className="badge-title">🏆 Philly Codefest 2026</div>
+              <div className="badge-sub">Built for Philadelphia's future</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Main App ─────────────────────────────────────────────────────────────
+    function App() {
+      const [activeTab, setActiveTab] = useState('chat');
+      const [messages, setMessages] = useState([]);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const sendMessage = useCallback(async (text) => {
+        const userMsg = { role: 'user', content: text };
+        const newMessages = [...messages, userMsg];
+        setMessages(newMessages);
+        setIsLoading(true);
+
+        try {
+          const res = await fetch(`${API_BASE}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: newMessages.map(m => ({
+                role: m.role === 'ai' ? 'assistant' : m.role,
+                content: m.content
+              }))
+            })
+          });
+
+          if (!res.ok) throw new Error('API error');
+          const data = await res.json();
+          setMessages(prev => [...prev, { role: 'ai', content: data.response }]);
+        } catch (err) {
+          // Demo fallback response when API isn't running
+          const fallbacks = [
+            "**Great question!** 🎓\n\nAs a Philadelphia student, you have access to some amazing resources that many people don't know about!\n\n**Say Yes Philadelphia** is probably the biggest: it provides **full college tuition** for students who graduate from Philadelphia public schools. This is one of the most powerful scholarship programs in the country.\n\nHere are the top things I'd recommend:\n1. **File FAFSA** as early as October 1st — this unlocks all federal and state aid\n2. **Apply to Say Yes Philadelphia** — free tuition awaits!\n3. **Check out Philadelphia Futures** if you're a first-gen student — they provide free mentorship\n4. **Look into the CCP Promise Scholarship** for free community college tuition\n\nWhat grade are you in? I can give you more specific advice! 🦅",
+            "**I'm here to help!** 🌟\n\nPhiladelphia has more resources for students than most people realize. The key is knowing where to look — and that's exactly what I'm here for.\n\nCan you tell me a bit more about yourself?\n- What grade are you in?\n- What subjects or careers interest you?\n- Are you a first-generation college student?\n\nWith that info, I can point you to the *exact* scholarships and programs that fit your situation best!",
+          ];
+          const fallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+          setMessages(prev => [...prev, { role: 'ai', content: fallback }]);
+        } finally {
+          setIsLoading(false);
+        }
+      }, [messages]);
+
+      const handleQuickPrompt = (text) => {
+        setActiveTab('chat');
+        sendMessage(text);
+      };
+
+      const handleAskAI = (text) => {
+        setActiveTab('chat');
+        sendMessage(text);
+      };
+
+      return (
+        <div className="app-container">
+          <Sidebar onQuickPrompt={handleQuickPrompt} />
+
+          <div className="main-content">
+            <StatsBanner />
+
+            <div className="tab-bar">
+              <button
+                className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                💬 AI Counselor
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'opportunities' ? 'active' : ''}`}
+                onClick={() => setActiveTab('opportunities')}
+              >
+                🎯 Opportunities
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'about' ? 'active' : ''}`}
+                onClick={() => setActiveTab('about')}
+              >
+                ℹ️ About
+              </button>
+            </div>
+
+            {activeTab === 'chat' && (
+              <ChatTab
+                messages={messages}
+                isLoading={isLoading}
+                onSend={sendMessage}
+                onQuickPrompt={handleQuickPrompt}
+              />
+            )}
+            {activeTab === 'opportunities' && (
+              <OpportunitiesTab onAskAI={handleAskAI} />
+            )}
+            {activeTab === 'about' && <AboutTab />}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

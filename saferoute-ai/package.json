@@ -1,0 +1,27 @@
+{
+  "name": "saferoute-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/check-model.js",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "train": "python3 scripts/train_risk_model.py",
+    "train:force": "python3 scripts/train_risk_model.py --retrain",
+    "train:xgb": "python3 scripts/train_xgboost_model.py",
+    "train:xgb:force": "python3 scripts/train_xgboost_model.py --retrain",
+    "train:all": "npm run train:force && npm run train:xgb:force"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@react-google-maps/api": "2.19.3"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.7",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.41"
+  }
+}

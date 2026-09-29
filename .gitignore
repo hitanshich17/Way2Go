@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Node / Next.js
+node_modules/
+.next/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Model training cache
+.xgb-cache.json

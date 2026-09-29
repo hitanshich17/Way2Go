@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-04-11T19:49:14.271631",
+  "num_crimes": 43328,
+  "data_hash": "efdea17d9d",
+  "model": {
+    "bandwidth": 0.002,
+    "cell_size": 0.001
+  }
+}

@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --safe: #10b981;
+  --moderate: #f59e0b;
+  --risky: #ef4444;
+  --bg: #050d1a;
+  --card: #0a1628;
+  --card2: #0d1f38;
+  --border: #112448;
+  --text: #e2e8f0;
+  --muted: #64748b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next { height: 100%; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Animations ────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.08); opacity: 0.7; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+
+.fade-up     { animation: fadeUp .35s ease both; }
+.spin-slow   { animation: spin-slow 1.6s linear infinite; }
+
+/* ── Score ring (SVG-based) ────────────────────────── */
+.score-ring circle { transition: stroke-dashoffset 0.8s cubic-bezier(.4,0,.2,1); }
+
+/* ── Skeleton loader ───────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--card2) 25%, var(--border) 50%, var(--card2) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+
+/* ── Route card ────────────────────────────────────── */
+.route-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.route-card:hover {
+  border-color: #1e3a6e;
+  transform: translateX(3px);
+}
+
+.route-card.selected {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #0a1628, #0d1f38);
+  box-shadow: 0 0 0 1px rgba(37,99,235,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.route-card.selected::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 0 0 0 14px;
+}
+
+/* ── Safety bar ────────────────────────────────────── */
+.safety-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.safety-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Google Places Autocomplete ────────────────────── */
+.pac-container {
+  background: #0d1f38 !important;
+  border: 1px solid #112448 !important;
+  border-radius: 10px !important;
+  margin-top: 4px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6) !important;
+  font-family: 'Inter', sans-serif !important;
+  z-index: 9999;
+}
+
+.pac-item {
+  padding: 10px 14px !important;
+  border-top: 1px solid #112448 !important;
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  cursor: pointer;
+}
+
+.pac-item:first-child { border-top: none !important; }
+
+.pac-item:hover, .pac-item-selected {
+  background: #112448 !important;
+}
+
+.pac-item-query {
+  color: #e2e8f0 !important;
+  font-size: 13px !important;
+}
+
+.pac-icon { display: none !important; }
+
+/* ── Loading dots ──────────────────────────────────── */
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+.dot:nth-child(1) { animation: bounce-dot 1.2s infinite 0.0s; }
+.dot:nth-child(2) { animation: bounce-dot 1.2s infinite 0.15s; }
+.dot:nth-child(3) { animation: bounce-dot 1.2s infinite 0.3s; }
+
+/* ── Map container ─────────────────────────────────── */
+.map-wrapper { width: 100%; height: 100%; position: relative; }
+
+/* ── Input field ───────────────────────────────────── */
+.route-input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px 12px 42px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.route-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+.route-input::placeholder { color: var(--muted); }
+
+/* ── CTA button ────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e40af, #1d4ed8);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Toggle button ─────────────────────────────────── */
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(13,31,56,0.9);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .15s;
+  backdrop-filter: blur(8px);
+}
+
+.toggle-btn:hover { border-color: #2563eb; color: #e2e8f0; }
+.toggle-btn.active { border-color: #2563eb; color: #60a5fa; background: rgba(37,99,235,0.1); }
